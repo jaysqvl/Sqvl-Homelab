@@ -18,6 +18,8 @@ services:
       - tailscale-data:/var/lib/tailscale
     environment:
       TS_AUTHKEY: ${TS_AUTH_KEY}
+      TS_ROUTES: 192.168.1.9/32
+      TS_EXTRA_ARGS: --accept-routes
       TS_STATE_DIR: /var/lib/tailscale
       TS_USERSPACE: 'false'
       TS_ACCEPT_DNS: 'false'
@@ -32,6 +34,7 @@ services:
       # - 5335:5335/tcp # Uncomment to enable unbound access on local server
       # - 22:22/tcp # Uncomment to enable SSH
     restart: unless-stopped
+
 
   pihole:
     container_name: pihole-unbound

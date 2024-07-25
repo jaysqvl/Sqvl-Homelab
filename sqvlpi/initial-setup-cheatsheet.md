@@ -75,15 +75,26 @@ You can do this more advanced set-up
 
 Place this script here for convenience
 ```
-sudo nano /usr/local/bin/set_promisc_mode.sh
+sudo nano /usr/local/sbin/setup-promisc.sh
 ```
 
 Add these lines to the script (Ctrl+V) then (Ctrl+S) and (Ctrl+X)
 ```
 #!/bin/bash
 
+# Wait until eth0 is available
+while ! ip link show eth0 >/dev/null 2>&1; do sleep 1; done
+# Enable promiscuous mode on eth0
 ip link set eth0 promisc on
+
+# Wait until docker0 is available
+while ! ip link show docker0 >/dev/null 2>&1; do sleep 1; done
+# Enable promiscuous mode on docker0
 ip link set docker0 promisc on
+
+# Wait until tailscale0 is available
+while ! ip link show tailscale0 >/dev/null 2>&1; do sleep 1; done
+# Enable promiscuous mode on tailscale0
 ip link set tailscale0 promisc on
 ```
 
