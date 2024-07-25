@@ -58,4 +58,65 @@ sudo docker network create -d macvlan \
   -o parent=eth0 br0
 ```
 
+## Make sure your network interfaces are in promiscuous mode
+Ensure the network interfaces are in promiscuous mode so that multiple MAC addresses can send data out of the same port
+```
+ip link set eth0 promisc on
+```
+```
+ip link set docker0 promisc on
+```
+```
+ip link set tailscale0 promisc on
+```
+
+To make sure that these settings stick on reboot
+You can do this more advanced set-up
+
+Place this script here for convenience
+```
+sudo nano /usr/local/bin/set_promisc_mode.sh
+```
+
+Add these lines to the script (Ctrl+V) then (Ctrl+S) and (Ctrl+X)
+```
+#!/bin/bash
+
+ip link set eth0 promisc on
+ip link set docker0 promisc on
+ip link set tailscale0 promisc on
+```
+
+Make it executable
+```
+sudo nano /usr/local/bin/set_promisc_mode.sh
+```
+
+Create a new systemd service file
+```
+sudo nano /etc/systemd/system/promisc_mode.service
+```
+
+Add these lines to it (Ctrl+V) then (Ctrl+S) and (Ctrl+X)
+```
+[Unit]
+Description=Set network interfaces to promiscuous mode
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/set_promisc_mode.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and restart the service
+```
+sudo systemctl daemon-reload
+sudo systemctl enable promisc_mode.service
+sudo systemctl start promisc_mode.service
+```
+
 After this you can proceed with installing the stacks with the given docker compose files
