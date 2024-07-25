@@ -1,22 +1,33 @@
-version: '3.0'
+version: '4.0'
 
 volumes:
+  tailscale-data:
   etc_pihole-unbound:
   etc_pihole_dnsmasq-unbound:
 
 services:
+  tailscale:
+    image: tailscale/tailscale:stable
+    container_name: sqvlpi-tailscale-pihole
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun
+    volumes:
+      - tailscale-data:/var/lib/tailscale
+    environment:
+      TS_AUTHKEY: ${TS_AUTH_KEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: 'false'
+    networks:
+      br0:
+        ipv4_address: 192.168.1.5
+    restart: unless-stopped
+
   pihole:
-    container_name: pihole
+    container_name: pihole-unbound
     image: cbcrowe/pihole-unbound:latest
-    hostname: ${HOSTNAME}
-    domainname: ${DOMAIN_NAME}
-    ports:
-      - 443:443/tcp
-      - 53:53/tcp
-      - 53:53/udp
-      - ${PIHOLE_WEBPORT:-80}:80/tcp # Allows use of different port to access Pi-hole web interface when other Docker containers use port 80
-      # - 5335:5335/tcp # Uncomment to enable unbound access on local server
-      # - 22/tcp # Uncomment to enable SSH
     environment:
       - FTLCONF_LOCAL_IPV4=${FTLCONF_LOCAL_IPV4}
       - TZ=${TZ:-UTC}
@@ -27,15 +38,13 @@ services:
       - REV_SERVER_DOMAIN=${REV_SERVER_DOMAIN}
       - REV_SERVER_CIDR=${REV_SERVER_CIDR}
       - PIHOLE_DNS_=127.0.0.1#5335
-      - DNSSEC="true"
+      - DNSSEC="false"
       - DNSMASQ_LISTENING=single
     volumes:
       - etc_pihole-unbound:/etc/pihole:rw
       - etc_pihole_dnsmasq-unbound:/etc/dnsmasq.d:rw
     restart: unless-stopped
-    networks:
-      br0:
-        ipv4_address: 192.168.1.5
+    network_mode: "container:sqvlpi-tailscale-pihole"
 
 networks:
   br0:

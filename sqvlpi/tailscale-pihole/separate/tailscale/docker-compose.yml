@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  tailscale:
+    image: tailscale/tailscale:stable
+    container_name: sqvlpi-tailscale-pihole
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun
+    volumes:
+      - tailscale-data:/var/lib/tailscale
+    environment:
+      TS_AUTHKEY: ${TS_AUTH_KEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: 'false'
+    networks:
+      br0:
+        ipv4_address: 192.168.1.5
+    restart: unless-stopped
+
+volumes:
+  tailscale-data:
+
+networks:
+  br0:
+    external: true
